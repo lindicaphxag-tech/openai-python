@@ -68,6 +68,11 @@ class Stream(Generic[_T]):
         try:
             for sse in iterator:
                 if sse.data.startswith("[DONE]"):
+                    # The SSE [DONE] marker is an application-level terminator. The
+                    # HTTP body terminator still has to be consumed for httpcore to
+                    # recognize the response as reusable.
+                    for _ in iterator:
+                        pass
                     break
 
                 # we have to special case the Assistants `thread.` events since we won't have an "event" key in the data
@@ -183,6 +188,11 @@ class AsyncStream(Generic[_T]):
         try:
             async for sse in iterator:
                 if sse.data.startswith("[DONE]"):
+                    # The SSE [DONE] marker is an application-level terminator. The
+                    # HTTP body terminator still has to be consumed for httpcore to
+                    # recognize the response as reusable.
+                    async for _ in iterator:
+                        pass
                     break
 
                 # we have to special case the Assistants `thread.` events since we won't have an "event" key in the data
