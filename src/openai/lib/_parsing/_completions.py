@@ -12,7 +12,7 @@ from ..._types import Omit, omit
 from ..._utils import is_dict, is_given
 from ..._compat import PYDANTIC_V1, model_parse_json
 from ..._models import construct_type_unchecked
-from .._pydantic import is_basemodel_type, is_dataclass_like_type, to_strict_json_schema, _to_api_name
+from .._pydantic import _to_api_name, is_basemodel_type, is_dataclass_like_type, to_strict_json_schema
 from ...types.chat import (
     ParsedChoice,
     ChatCompletion,
