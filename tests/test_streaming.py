@@ -438,3 +438,38 @@ def make_event_iterator(
     return AsyncStream(
         cast_to=object, client=async_client, response=httpx2.Response(200, content=to_aiter(content))
     )._iter_events()
+
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("sync", [True, False], ids=["sync", "async"])
+async def test_stream_drains_body_after_done(sync: bool, client: OpenAI, async_client: AsyncOpenAI) -> None:
+    consumed = False
+
+    def body() -> Iterator[bytes]:
+        nonlocal consumed
+        yield b"data: [DONE]\n\n"
+        consumed = True
+        yield b"0\r\n\r\n"
+
+    if sync:
+        response = httpx2.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            content=body(),
+        )
+        stream = Stream(cast_to=object, client=client, response=response)
+        with pytest.raises(StopIteration):
+            next(stream)
+    else:
+        response = httpx2.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            content=to_aiter(body()),
+        )
+        stream = AsyncStream(cast_to=object, client=async_client, response=response)
+        with pytest.raises(StopAsyncIteration):
+            await stream.__anext__()
+
+    assert consumed
+    assert response.is_closed
