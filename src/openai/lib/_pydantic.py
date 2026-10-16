@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import re
 from typing import Any, TypeVar
 from typing_extensions import TypeGuard
 
@@ -11,6 +12,14 @@ from .._utils import is_dict as _is_dict, is_list
 from .._compat import PYDANTIC_V1, model_json_schema
 
 _T = TypeVar("_T")
+
+_API_NAME_PATTERN = re.compile(r"[^a-zA-Z0-9_-]")
+
+
+def _to_api_name(name: str) -> str:
+    """Normalize an inferred Pydantic model name to the API's identifier contract."""
+    return _API_NAME_PATTERN.sub("_", name)[:64] or "_"
+
 
 
 def to_strict_json_schema(model: type[pydantic.BaseModel] | pydantic.TypeAdapter[Any]) -> dict[str, Any]:
